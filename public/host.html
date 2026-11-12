@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <title>ST5SSPlayer · host</title>
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/css/app.css" />
+  </head>
+  <body class="host-page">
+    <div class="ambient ambient-a" aria-hidden="true"></div>
+    <div class="ambient ambient-c" aria-hidden="true"></div>
+    <div class="noise" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="ST5SSPlayer home">ST5SS<span>Player</span><em>host</em></a>
+      <div class="topbar-status">
+        <span id="serverPill" class="status-pill" data-level="warn">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="serverPillText">Connecting</span>
+        </span>
+        <span id="tunnelPill" class="status-pill" data-level="info">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="tunnelPillText">Tunnel</span>
+        </span>
+        <span id="listenerCountPill" class="listener-count-pill">0 listening</span>
+        <button id="diagToggle" class="btn btn-ghost btn-small" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12h3l2.2-6 3.1 12 2.4-8 1.8 4H21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          Self-check
+        </button>
+      </div>
+    </header>
+
+    <main class="host-layout">
+      <div class="main-column">
+        <section id="playerCard" class="panel player-card">
+          <div class="panel-head player-head">
+            <div class="now-copy">
+              <p class="eyebrow">Now playing</p>
+              <h1 id="trackTitle">Drop an audio file to begin</h1>
+              <p id="trackMeta" class="track-meta">MP3, WAV, M4A, OGG, FLAC. Decoded locally, never uploaded.</p>
+            </div>
+            <div class="level-meter" id="levelMeter" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+
+          <div class="cover-row">
+            <div class="cover" id="cover">
+              <div class="cover-sheen"></div>
+              <div class="cover-disc" id="coverDisc"></div>
+              <span class="cover-glyph" id="coverGlyph">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 18V6l10-2v11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                  <circle cx="6.5" cy="18" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+                  <circle cx="16.5" cy="15" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+              </span>
+            </div>
+            <div class="wave-block">
+              <canvas id="waveform" aria-hidden="true"></canvas>
+              <div id="waveEmpty" class="wave-empty">
+                <span>Select files with the button below, or drop them anywhere on this page.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="seek-row">
+            <span id="currentTime" class="mono time-label">0:00</span>
+            <input id="seekSlider" class="range seek-range" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek through track" />
+            <span id="durationTime" class="mono time-label">0:00</span>
+          </div>
+
+          <div class="transport-row">
+            <div class="transport-buttons">
+              <button id="prevBtn" class="icon-btn" type="button" title="Previous track" aria-label="Previous track">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 5v14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M19 6.5 10 12l9 5.5v-11Z" fill="currentColor" />
+                </svg>
+              </button>
+              <button id="playBtn" class="play-btn" type="button" title="Play (Space)" aria-label="Play">
+                <svg id="playIcon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8.5 5.5v13l10-6.5-10-6.5Z" fill="currentColor" />
+                </svg>
+                <svg id="pauseIcon" class="is-hidden" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="7" y="5.5" width="3.6" height="13" rx="1.2" fill="currentColor" />
+                  <rect x="13.4" y="5.5" width="3.6" height="13" rx="1.2" fill="currentColor" />
+                </svg>
+                <span id="playSpinner" class="spinner is-hidden" aria-hidden="true"></span>
+              </button>
+              <button id="stopBtn" class="icon-btn" type="button" title="Stop (S)" aria-label="Stop">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="6.5" y="6.5" width="11" height="11" rx="1.6" fill="currentColor" />
+                </svg>
+              </button>
+              <button id="nextBtn" class="icon-btn" type="button" title="Next track" aria-label="Next track">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M17 5v14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M5 6.5 14 12l-9 5.5v-11Z" fill="currentColor" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="volume-group">
+              <button id="muteBtn" class="icon-btn icon-btn-small" type="button" title="Mute (M)" aria-label="Mute">
+                <svg id="volumeIcon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor" />
+                  <path d="M16 9a4.5 4.5 0 0 1 0 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                  <path d="M18.5 6.6a8 8 0 0 1 0 10.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".55" />
+                </svg>
+                <svg id="muteIcon" class="is-hidden" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor" />
+                  <path d="m16 9 5 5m0-5-5 5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                </svg>
+              </button>
+              <input id="volumeSlider" class="range volume-range" type="range" min="0" max="1000" value="800" step="1" aria-label="Volume 0 to 1000" />
+              <span id="volumeValue" class="mono volume-value">800</span>
+            </div>
+
+            <button id="testBtn" class="btn btn-test" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor" />
+                <path d="M16 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+              </svg>
+              Test audio
+            </button>
+          </div>
+
+          <div class="file-row">
+            <button id="addFilesBtn" class="btn btn-secondary" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+              Add audio files
+            </button>
+            <span id="decodeStatus" class="decode-status">Ready when you are</span>
+            <span class="kbd-hint">
+              <kbd>Space</kbd> play <span class="kbd-sep">·</span> <kbd>←</kbd><kbd>→</kbd> seek
+              <span class="kbd-sep">·</span> <kbd>↑</kbd><kbd>↓</kbd> volume
+            </span>
+            <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.oga,.flac,.opus,.webm" multiple hidden />
+          </div>
+
+          <div id="dropVeil" class="drop-veil" aria-hidden="true">
+            <div class="drop-veil-inner">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M4 15.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+              <strong>Drop to add to the queue</strong>
+              <span>Files never leave this device</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel queue-card">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Queue</p>
+              <h2 id="queueHeading">No files yet</h2>
+            </div>
+            <div class="queue-actions">
+              <span id="queueCount" class="counter">0</span>
+              <button id="clearQueueBtn" class="text-btn" type="button">Clear</button>
+            </div>
+          </div>
+          <div id="queueList" class="queue-list">
+            <div class="empty-state">
+              <span class="empty-icon">＋</span>
+              <p>Add a few songs, then press play. The host tab is the only place your library lives.</p>
+            </div>
+          </div>
+          <p class="queue-note">Auto-advance waits for remote buffers to finish so listeners never lose the end of a track.</p>
+        </section>
+      </div>
+
+      <aside class="side-column">
+        <section class="panel invite-card">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Invite</p>
+              <h2>Listening link</h2>
+            </div>
+            <span id="linkMode" class="mini-badge" data-level="info">Tunnel</span>
+          </div>
+
+          <label class="field-label" for="listenerLink">Listener link <span>safe to share</span></label>
+          <div class="input-copy">
+            <input id="listenerLink" type="text" readonly value="" placeholder="Waiting for the quick tunnel…" />
+            <button id="copyListenerBtn" class="btn btn-small btn-secondary" type="button">Copy</button>
+          </div>
+          <div class="link-actions">
+            <button id="openListenerBtn" class="text-btn" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M14 4h6v6M20 4l-9 9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M19 14v5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 19V6a1.5 1.5 0 0 1 1.5-1.5H10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+              </svg>
+              Open listener view
+            </button>
+            <button id="rotateLinkBtn" class="text-btn" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 11a8 8 0 1 0-2.3 5.7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                <path d="M20 5v6h-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              New link
+            </button>
+          </div>
+
+          <div id="publicUrlEditor" class="public-url-editor is-hidden">
+            <label class="field-label" for="publicUrlInput">Public tunnel URL</label>
+            <div class="input-copy">
+              <input id="publicUrlInput" type="url" placeholder="https://example.trycloudflare.com" />
+              <button id="applyPublicUrlBtn" class="btn btn-small btn-secondary" type="button">Use</button>
+            </div>
+            <p class="field-hint">Paste the URL printed by <code>cloudflared tunnel --url</code>, or open this host page through the tunnel.</p>
+          </div>
+
+          <div class="host-link-block">
+            <label class="field-label" for="hostLink">Host link <span class="danger-text">keep private</span></label>
+            <div class="input-copy">
+              <input id="hostLink" type="text" readonly value="" />
+              <button id="copyHostBtn" class="btn btn-small btn-ghost" type="button">Copy</button>
+            </div>
+          </div>
+
+          <p id="linkNote" class="tunnel-note">The listener can play audio but cannot control anything.</p>
+        </section>
+
+        <section class="panel listeners-card">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Audience</p>
+              <h2>Listeners</h2>
+            </div>
+            <span id="listenerBadge" class="counter">0</span>
+          </div>
+          <div id="listenerList" class="listener-list">
+            <div class="empty-state compact">
+              <span class="empty-icon">◌</span>
+              <p>No one connected. Share the listener link when you’re ready.</p>
+            </div>
+          </div>
+          <div id="testSummary" class="test-summary is-hidden">
+            <div class="test-summary-head">
+              <span class="test-pulse" aria-hidden="true"></span>
+              <strong>Audio test</strong>
+              <button id="dismissTestBtn" class="text-btn" type="button">Dismiss</button>
+            </div>
+            <div id="testResults" class="test-results"></div>
+          </div>
+        </section>
+
+        <section id="healthCard" class="panel health-card">
+          <button id="healthToggle" class="health-head" type="button" aria-expanded="true">
+            <div>
+              <p class="eyebrow">Automatic self-check</p>
+              <h2 id="healthTitle">Checking the room…</h2>
+            </div>
+            <span id="healthSummary" class="health-summary" data-level="info">…</span>
+            <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <div id="healthBody" class="health-body">
+            <div id="healthChecks" class="health-checks">
+              <div class="check-row" data-level="info"><span class="check-dot"></span><span class="check-label">Waiting for handshake</span><span class="check-value">…</span></div>
+            </div>
+            <div class="health-actions">
+              <button id="runDiagBtn" class="btn btn-small btn-secondary" type="button">Run check</button>
+              <button id="copyDiagBtn" class="btn btn-small btn-ghost" type="button">Copy report</button>
+            </div>
+            <p id="diagUpdated" class="diag-updated">Not run yet</p>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <div id="fatalOverlay" class="fatal-overlay is-hidden" role="alertdialog" aria-modal="true" aria-labelledby="fatalTitle">
+      <div class="fatal-card">
+        <span class="eyebrow">Host link problem</span>
+        <h2 id="fatalTitle">This host link is not valid</h2>
+        <p id="fatalMessage">Open the private host link printed in your terminal.</p>
+      </div>
+    </div>
+
+    <div id="busyOverlay" class="busy-overlay is-hidden" role="status" aria-live="polite">
+      <span class="spinner spinner-large"></span>
+      <span id="busyText">Decoding audio…</span>
+    </div>
+
+    <script type="module" src="/js/host.js"></script>
+  </body>
+</html>

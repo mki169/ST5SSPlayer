@@ -1,0 +1,29 @@
+{
+  "name": "st5ssplayer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A private, invite-only listening room over a Cloudflare quick tunnel.",
+  "homepage": "https://github.com/mki169/ST5SSPlayer#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mki169/ST5SSPlayer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mki169/ST5SSPlayer/issues"
+  },
+  "license": "MIT",
+  "author": "mki169",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test",
+    "check": "node --check server/index.js && node --check server/app.js && node --check server/tunnel.js && node --check public/js/protocol.js && node --check public/js/ws-client.js && node --check public/js/listener-audio.js && node --check public/js/host-audio.js && node --check public/js/host.js && node --check public/js/listen.js && node --test"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "ws": "^8.22.2"
+  }
+}
